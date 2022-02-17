@@ -26,7 +26,7 @@ spec_list <- c('fcidddddddiiiii', #dailyActivity
                'fciii', #sleepDay
                'fcddddlf') #weightLogInfoc
 
-# Reload fitbit data
+# Reload fitbit data with new column specs
 for(i in 1:length(data_names)){
   assign(data_names[[i]], read_csv(paste0(data_directory, data_list[[i]]), col_types=spec_list[[i]]))
 }
@@ -62,4 +62,58 @@ weightLogInfo
 # There are many NA values for the column 'Fat'
 table(is.na(weightLogInfo$Fat))
 # There are only two values for the 'Fat' column so this should be removed
+weightLogInfo <- weightLogInfo %>% select(-Fat)
 
+
+# Merge data sets by daily, hourly, and minute record
+
+## DAILY RECORDS: `dailyActivity` and `sleepDay`
+# Change `sleepDay` date-time column to date
+sleepDay$SleepDay <- as.Date(sleepDay$SleepDay)
+# Left join `sleepDay` on `dailyActivity`
+data_day <- left_join(dailyActivity, sleepDay, by=c('Id', 'ActivityDate' = 'SleepDay'))
+table(complete.cases(data_day)) # only 413/943 observations are complete cases
+# Extract min, avg, and max heart rate for the day from `heartrate_seconds` table
+dailyHeartrate <- heartrate_seconds %>% 
+  mutate('Date' = floor_date(Time, 'day')) %>% 
+  group_by(Id, Date) %>% 
+  summarise('minHeartRate' = min(Value), 'avgHeartRate' = mean(Value), 'maxHeartRate' = max(Value))
+# Left join `dailyHeartrate` on data_day
+data_day <- left_join(data_day, dailyHeartrate, by=c('Id', 'ActivityDate' = 'Date'))
+table(complete.cases(data_day)) # only 182/943 observations are complete cases
+# Extract min, avg, and max METs for the day from `minuteMETsNarrow` table
+dailyMETs <- minuteMETsNarrow %>%
+  mutate('Date' = floor_date(ActivityMinute, 'day')) %>%
+  group_by(Id, Date) %>%
+  summarise('minMET' = min(METs), 'avgMET' = mean(METs), 'maxMET' = max(METs))
+# Left join `dailyMETs` on data_day
+data_day <- left_join(data_day, dailyMETs, by=c('Id', 'ActivityDate' = 'Date'))
+table(complete.cases(data_day)) # only 182/943 observations are complete cases (same)
+# Check if there are any duplicate weight records in one day
+weightLogInfo %>% mutate(Date = as.Date(Date)) %>% group_by(Id, Date) %>% tally() %>% table()
+# Only 8 participants recorded their weight at least once; none of the participants have a consistent record
+# Nonetheless, these will be extracted and joined to `data_day`
+weightLogInfo <- weightLogInfo %>% 
+  mutate(Date = as.Date(Date)) %>%
+  select(-LogId)
+data_day <- left_join(data_day, weightLogInfo, by=c('Id', 'ActivityDate' = 'Date'))
+table(complete.cases(data_day)) # only 32/943 observations are complete cases (same)
+
+## HOURLY RECORDS: `hourlyCalories`, `hourlyIntensities`, `hourlySteps`
+# Extract hourly heart rate, sleep, and METs data
+hourlyHeartrate <- heartrate_seconds %>% 
+  mutate('Time' = floor_date(Time, 'hour')) %>%
+  group_by(Id, Time) %>%
+  summarise('minHeartRate' = min(Value), 'avgHeartRate' = mean(Value), 'maxHeartRate' = max(Value))
+hourlySleep <- minuteSleep %>%
+  mutate('Time' = floor_date(date, 'hour')) %>% 
+  group_by(Id, Time) %>%
+  count(value) %>%
+  pivot_wider(names_from = value, names_prefix = 'sleep', values_from = n, values_fill = 0)
+hourlyMETs <- minuteMETsNarrow %>%
+  mutate('Time' = floor_date(ActivityMinute, 'hour')) %>%
+  group_by(Id, Time) %>%
+  summarise('minMET' = min(METs), 'avgMET' = mean(METs), 'maxMET' = max(METs))
+# 
+data_hour <- 
+## MINUTELY RECORDS: `minuteCaloriesNarrow`, `minuteIntensitiesNarrow`, `minuteMETsNarrow`, `minuteSleep`, `minuteStepsNarrow`

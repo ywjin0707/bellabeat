@@ -20,3 +20,5 @@ dailyActivity
 # The `dailyActivity` table is a superset of `dailyCalories`, `dailyIntensities`, and `dailySteps`
 # Data sets can be classified into three categories; records by day, hour, and minute. 
 # Only `heartrate_seconds` table has records every 5 seconds
+
+# For `minuteSleep` table, numbers indicate sleep status where: 1 = asleep, and 2 & 3 = awake but in bed
