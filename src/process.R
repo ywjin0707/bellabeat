@@ -114,6 +114,24 @@ hourlyMETs <- minuteMETsNarrow %>%
   mutate('Time' = floor_date(ActivityMinute, 'hour')) %>%
   group_by(Id, Time) %>%
   summarise('minMET' = min(METs), 'avgMET' = mean(METs), 'maxMET' = max(METs))
-# 
-data_hour <- 
+# Perform series of left joins to merge data tables
+data_hour <- left_join(hourlySteps, hourlyIntensities, by=c('Id', 'ActivityHour')) %>%
+  left_join(., hourlyCalories, by=c('Id', 'ActivityHour')) %>%
+  left_join(., hourlySleep, by=c('Id', 'ActivityHour'='Time')) %>%
+  left_join(., hourlyHeartrate, by=c('Id', 'ActivityHour' = 'Time')) %>%
+  left_join(., hourlyMETs, by=c('Id', 'ActivityHour' = 'Time'))
+
 ## MINUTELY RECORDS: `minuteCaloriesNarrow`, `minuteIntensitiesNarrow`, `minuteMETsNarrow`, `minuteSleep`, `minuteStepsNarrow`
+# Extract minutely heart rate
+minuteHeartrate <- heartrate_seconds %>% 
+  mutate('Time' = floor_date(Time, 'minute')) %>%
+  group_by(Id, Time) %>%
+  summarise('minHeartRate' = min(Value), 'avgHeartRate' = mean(Value), 'maxHeartRate' = max(Value))
+# Change format of date column in `minuteSleep` table
+minuteSleep <- mutate(minuteSleep, date = floor_date(date, 'minute'))
+# Perform series of left joins to merge data tables
+data_minute <- left_join(minuteStepsNarrow, minuteIntensitiesNarrow, by=c('Id', 'ActivityMinute')) %>%
+  left_join(., minuteCaloriesNarrow, by=c('Id', 'ActivityMinute')) %>% 
+  left_join(., minuteSleep, by=c('Id', 'ActivityMinute'='date')) %>%
+  left_join(., minuteHeartrate, by=c('Id', 'ActivityMinute'='Time')) %>%
+  left_join(., minuteMETsNarrow, by=c('Id', 'ActivityMinute'))

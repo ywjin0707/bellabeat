@@ -22,3 +22,8 @@ dailyActivity
 # Only `heartrate_seconds` table has records every 5 seconds
 
 # For `minuteSleep` table, numbers indicate sleep status where: 1 = asleep, and 2 & 3 = awake but in bed
+
+# Dates that the data was collected
+min(dailyActivity$ActivityDate)
+max(dailyActivity$ActivityDate)
+# Data was collected from 2016-04-12 to 2016-05-12 for a period of 30 days
