@@ -97,6 +97,9 @@ weightLogInfo <- weightLogInfo %>%
   mutate(Date = as.Date(Date)) %>%
   select(-LogId)
 data_day <- left_join(data_day, weightLogInfo, by=c('Id', 'ActivityDate' = 'Date'))
+# Add day column
+data_day <- data_day %>%
+  mutate('ActivityDay' = wday(ActivityDate, label=TRUE))
 table(complete.cases(data_day)) # only 32/943 observations are complete cases (same)
 
 ## HOURLY RECORDS: `hourlyCalories`, `hourlyIntensities`, `hourlySteps`
