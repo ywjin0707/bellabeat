@@ -1,3 +1,9 @@
+# Divide users into groups of usage patterns
+data_day[order(data_day$)]
+ggplot(data=data_day) +
+  geom_bar(mapping=aes(x=Id)) +
+  theme(axis.text.x=element_blank())
+
 # Q1. What is the usage trend across the month
 # How many records are there for each day of the week?
 table(data_day$ActivityDay)
@@ -11,7 +17,7 @@ ggplot(data=data_day) +
 
 # Chi-squared test for goodness of fit
 chisq.test(table(data_day$ActivityDay))
-## shows that differences record counts for each day are not statistically significant
+## shows that differences record counts for each day are not statistically significant (p-value = 0.1467)
 
 # Were users more active on specific days of the week?
 ggplot(data=data_day, aes(x=ActivityDay, y=TotalSteps)) +
@@ -38,7 +44,7 @@ ggplot(data=data_day) +
 
 # Time in bed and time spent sleeping 
 ggplot(data=data_day) + 
-  geom_vline(xintercept = ActivityDate[which(is.holiday(ActivityDate))])
+  geom_vline(xintercept = data_day$ActivityDate[which(data_day$ActivityDay == 'Sat' | data_day$ActivityDay == 'Sun')]) +
   geom_smooth(mapping = aes(x=ActivityDate, y=TotalMinutesAsleep), color='blue') +
   geom_smooth(mapping = aes(x=ActivityDate, y=TotalTimeInBed), color='cyan') +
   theme_minimal()

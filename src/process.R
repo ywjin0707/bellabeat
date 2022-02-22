@@ -64,6 +64,15 @@ table(is.na(weightLogInfo$Fat))
 # There are only two values for the 'Fat' column so this should be removed
 weightLogInfo <- weightLogInfo %>% select(-Fat)
 
+# Check each data set for duplicated values
+for(i in 1:length(data_names)){
+  data_name = data_names[[i]]
+  print(data_name)
+  print(table(duplicated(get(data_name))))
+}
+# There are duplicated observations for `minuteSleep` and `sleepDay` data
+sleepDay <- sleepDay[!duplicated(sleepDay),]
+minuteSleep <- minuteSleep[!duplicated(minuteSleep),]
 
 # Merge data sets by daily, hourly, and minute record
 
@@ -138,3 +147,9 @@ data_minute <- left_join(minuteStepsNarrow, minuteIntensitiesNarrow, by=c('Id', 
   left_join(., minuteSleep, by=c('Id', 'ActivityMinute'='date')) %>%
   left_join(., minuteHeartrate, by=c('Id', 'ActivityMinute'='Time')) %>%
   left_join(., minuteMETsNarrow, by=c('Id', 'ActivityMinute'))
+
+# MONTHLY RECORDS
+data_month <- data_day %>%
+  select(-ActivityDate,-minHeartRate,-avgHeartRate,-maxHeartRate,-minMET,-avgMET,-maxMET,-IsManualReport, -ActivityDay) %>%
+  group_by(Id) %>%
+  summarise(across(.cols=everything(), .fns=list(min = min, mean = mean, max = max, sum = sum), .names="{.col}_{.fn}"))
