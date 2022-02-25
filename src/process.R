@@ -148,8 +148,12 @@ data_minute <- left_join(minuteStepsNarrow, minuteIntensitiesNarrow, by=c('Id', 
   left_join(., minuteHeartrate, by=c('Id', 'ActivityMinute'='Time')) %>%
   left_join(., minuteMETsNarrow, by=c('Id', 'ActivityMinute'))
 
-# MONTHLY RECORDS
+# MONTHLY RECORDS by user
 data_month <- data_day %>%
   select(-ActivityDate,-minHeartRate,-avgHeartRate,-maxHeartRate,-minMET,-avgMET,-maxMET,-IsManualReport, -ActivityDay) %>%
   group_by(Id) %>%
   summarise(across(.cols=everything(), .fns=list(min = min, mean = mean, max = max, sum = sum), .names="{.col}_{.fn}"))
+monthSleep <- sleepDay %>%
+  group_by(Id) %>%
+  summarise(TotalSleepRecords=sum(TotalSleepRecords), avgMinutesAsleep=mean(TotalMinutesAsleep), avgTimeInBed=mean(TotalTimeInBed))
+data_month <- left_join(data_month, monthSleep, by=c('Id'))

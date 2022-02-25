@@ -16,7 +16,7 @@ Remember, there are many different CSV files in the dataset. We have uploaded tw
 You can always install and load packages along the way as you may discover you need different packages after you start your analysis. If you already have some of these packages installed and loaded, you can skip those ones - or you can choose to run those specific lines of code anyway. It may take a few moments to run.
 
 ```{r}
-install.packages('tidyverse')
+# install.packages('tidyverse')
 library(tidyverse)
 ```
 

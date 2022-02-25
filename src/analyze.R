@@ -1,8 +1,9 @@
 # Divide users into groups of usage patterns
-data_day[order(data_day$)]
-ggplot(data=data_day) +
-  geom_bar(mapping=aes(x=Id)) +
-  theme(axis.text.x=element_blank())
+data_day[order(data_day$Id)]
+ggplot(data=data_month) +
+  geom_point(mapping=aes(x=reorder(Id, Calories_sum), y=Calories_sum)) +
+  theme(axis.text.x=element_blank()) +
+  geom_vline(xintercept = data_month[which(data_month$Calories_sum %in% quantile(data_month$Calories_sum)),]$Id)
 
 # Q1. What is the usage trend across the month
 # How many records are there for each day of the week?
