@@ -1,11 +1,46 @@
-# Divide users into groups of usage patterns
-data_day[order(data_day$Id)]
-ggplot(data=data_month) +
-  geom_point(mapping=aes(x=reorder(Id, Calories_sum), y=Calories_sum)) +
-  theme(axis.text.x=element_blank()) +
-  geom_vline(xintercept = data_month[which(data_month$Calories_sum %in% quantile(data_month$Calories_sum)),]$Id)
+# Q1. What is the usage pattern across the month?
+# Visualize users into groups of usage patterns
+data_month %>% 
+  mutate(Calories_bin = factor(ntile(Calories_sum, n=3))) %>%
+  ggplot() +
+  geom_point(mapping=aes(x=reorder(Id, Calories_sum), y=Calories_sum, color=Calories_bin), size=3) +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank())
 
-# Q1. What is the usage trend across the month
+# Visualize users by number of records
+data_day %>%
+  group_by(Id) %>%
+  count() %>%
+  mutate(UsagePattern = factor(cut(n, breaks=c(0, 10,20,30,31), 
+                                   labels = c('Rarely', 'Occasionally', 'Frequently', 'Daily')))) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x=n, fill=UsagePattern)) +
+  xlab('# of days recorded') +
+  ylab('User count')
+
+# Bin users by number of records
+data_month <- data_day %>%
+  group_by(Id) %>%
+  count() %>%
+  mutate(UsagePattern = factor(cut(n, breaks=c(0, 10,20,30,31), 
+                                   labels = c('Rarely', 'Occasionally', 'Frequently', 'Daily')))) %>%
+  right_join(.,data_month, by=c('Id'))
+
+# Visualize "Calories_sum" again by user bin
+data_month %>% 
+  ggplot() +
+  geom_point(mapping=aes(x=reorder(Id, Calories_sum), y=Calories_sum, color=UsagePattern), size=3) +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+# Visualize "Calories_mean" by user bin
+data_month %>% 
+  ggplot() +
+  geom_point(mapping=aes(x=reorder(Id, Calories_mean), y=Calories_mean, color=UsagePattern), size=3) +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+data_month %>% 
+  ggplot() +
+  geom_point(mapping=aes(x=reorder(Id, TotalSteps_mean), y=TotalSteps_mean, color=UsagePattern), size=3) +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+
+# Q2. What is the usage trend across the month
 # How many records are there for each day of the week?
 table(data_day$ActivityDay)
 # Expected value of records for each day of the week
@@ -47,6 +82,6 @@ ggplot(data=data_day) +
 ggplot(data=data_day) + 
   geom_vline(xintercept = data_day$ActivityDate[which(data_day$ActivityDay == 'Sat' | data_day$ActivityDay == 'Sun')]) +
   geom_smooth(mapping = aes(x=ActivityDate, y=TotalMinutesAsleep), color='blue') +
-  geom_smooth(mapping = aes(x=ActivityDate, y=TotalTimeInBed), color='cyan') +
+  geom_smooth(mapping = aes(x=ActivityDate, y=TotalTimeInBed), color='red') +
   theme_minimal()
 
